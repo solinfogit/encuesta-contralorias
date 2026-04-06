@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Encuesta — Nivel de Automatizacion e Integracion</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #2563eb;
+      --primary-light: #3b82f6;
+      --primary-dark: #1d4ed8;
+      --accent: #0ea5e9;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #475569;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --error: #ef4444;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,.06);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ─── PROGRESS BAR ─── */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; width: 100%; height: 5px;
+      background: var(--border); z-index: 100;
+    }
+    .progress-bar__fill {
+      height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width .5s cubic-bezier(.4,0,.2,1);
+      border-radius: 0 3px 3px 0;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      position: fixed; top: 5px; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 28px; z-index: 90;
+      background: rgba(248,250,252,.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .header__step {
+      font-size: 13px; font-weight: 600; color: var(--text-secondary);
+      letter-spacing: .3px;
+    }
+    .header__step span { color: var(--primary); }
+
+    /* ─── SLIDE CONTAINER ─── */
+    .slides {
+      height: 100%; width: 100%;
+      position: relative; overflow: hidden;
+    }
+    .slide {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      padding: 80px 24px 100px;
+      opacity: 0; pointer-events: none;
+      transform: translateX(60px);
+      transition: opacity .45s ease, transform .45s ease;
+    }
+    .slide.active {
+      opacity: 1; pointer-events: auto; transform: translateX(0);
+    }
+    .slide.exit-left {
+      opacity: 0; transform: translateX(-60px);
+    }
+
+    .slide__inner {
+      width: 100%; max-width: 640px;
+    }
+
+    /* ─── WELCOME / END SCREENS ─── */
+    .slide--welcome .slide__inner,
+    .slide--end .slide__inner { text-align: center; }
+
+    .slide--welcome h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800;
+      line-height: 1.2; margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .slide--welcome p {
+      font-size: 15px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 32px;
+    }
+
+    .slide--end h1 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 800; margin-bottom: 8px;
+    }
+    .slide--end .check-icon {
+      width: 72px; height: 72px; margin: 0 auto 20px;
+      border-radius: 50%; background: var(--success);
+      display: flex; align-items: center; justify-content: center;
+      animation: popIn .5s cubic-bezier(.17,.67,.29,1.3);
+    }
+    .slide--end .check-icon svg { width: 36px; height: 36px; color: #fff; }
+    @keyframes popIn { 0%{transform:scale(0)} 100%{transform:scale(1)} }
+
+    .slide--end p { color: var(--text-secondary); font-size: 15px; }
+
+    /* ─── QUESTION STYLING ─── */
+    .question__number {
+      display: inline-block; font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--primary); margin-bottom: 10px;
+    }
+    .question__title {
+      font-size: clamp(1.15rem, 2.5vw, 1.45rem); font-weight: 700;
+      line-height: 1.4; margin-bottom: 8px;
+    }
+    .question__desc {
+      font-size: 14px; color: var(--text-secondary); line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    /* ─── INPUTS ─── */
+    .field-group { margin-bottom: 16px; }
+    .field-group label {
+      display: block; font-size: 13px; font-weight: 600;
+      color: var(--text-secondary); margin-bottom: 6px;
+    }
+    .field-group input, .field-group select {
+      width: 100%; padding: 12px 14px; font-size: 15px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      background: var(--card); color: var(--text);
+      font-family: inherit;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .field-group input:focus, .field-group select:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ─── OPTION CARDS (radio/checkbox) ─── */
+    .option-cards { display: flex; flex-direction: column; gap: 10px; }
+    .option-card {
+      position: relative; cursor: pointer;
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 18px; border: 1.5px solid var(--border);
+      border-radius: var(--radius); background: var(--card);
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    .option-card:hover { border-color: var(--primary-light); background: #f0f5ff; }
+    .option-card.selected {
+      border-color: var(--primary); background: #eff6ff;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.10);
+    }
+    .option-card input { display: none; }
+    .option-card__radio {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .2s;
+    }
+    .option-card.selected .option-card__radio {
+      border-color: var(--primary);
+    }
+    .option-card__radio::after {
+      content: ''; width: 10px; height: 10px; border-radius: 50%;
+      background: var(--primary); transform: scale(0);
+      transition: transform .2s cubic-bezier(.4,0,.2,1);
+    }
+    .option-card.selected .option-card__radio::after { transform: scale(1); }
+    .option-card__label { font-size: 15px; font-weight: 500; }
+
+    /* ─── TABLE QUESTIONS ─── */
+    .table-q { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    .table-q th {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-secondary);
+      padding: 10px 12px; text-align: center;
+      border-bottom: 2px solid var(--border);
+    }
+    .table-q th:first-child { text-align: left; }
+    .table-q td {
+      padding: 14px 12px; border-bottom: 1px solid var(--border);
+      font-size: 14px; font-weight: 500;
+    }
+    .table-q td:not(:first-child) { text-align: center; }
+    .table-q tr:last-child td { border-bottom: none; }
+
+    /* custom radio in table */
+    .table-radio {
+      appearance: none; -webkit-appearance: none;
+      width: 20px; height: 20px; border: 2px solid var(--border);
+      border-radius: 50%; cursor: pointer; position: relative;
+      transition: border-color .2s;
+    }
+    .table-radio:checked {
+      border-color: var(--primary);
+    }
+    .table-radio:checked::after {
+      content: ''; position: absolute; inset: 3px;
+      border-radius: 50%; background: var(--primary);
+    }
+
+    /* ─── RANGE SELECTOR ─── */
+    .range-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+    }
+    .range-row:last-child { border-bottom: none; }
+    .range-row__label { width: 160px; font-size: 14px; font-weight: 500; flex-shrink: 0; }
+    .range-row__select {
+      flex: 1; padding: 10px 12px; border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: 14px; font-family: inherit;
+      background: var(--card); color: var(--text); cursor: pointer;
+    }
+    .range-row__select:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+
+    /* ─── NPS ─── */
+    .nps-row {
+      display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
+    }
+    .nps-btn {
+      width: 44px; height: 44px; border: 1.5px solid var(--border);
+      border-radius: 10px; background: var(--card); cursor: pointer;
+      font-size: 15px; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .nps-btn:hover { border-color: var(--primary-light); background: #f0f5ff; }
+    .nps-btn.selected {
+      border-color: var(--primary); background: var(--primary); color: #fff;
+    }
+    .nps-labels {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: var(--text-secondary); margin-top: 8px;
+    }
+
+    /* ─── TEXTAREA ─── */
+    .field-group textarea {
+      width: 100%; padding: 14px; font-size: 15px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      background: var(--card); color: var(--text);
+      font-family: inherit; resize: vertical; min-height: 110px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .field-group textarea:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+
+    /* ─── BUTTONS ─── */
+    .nav-buttons {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 28px;
+      background: rgba(248,250,252,.9); backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border); z-index: 90;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 28px; font-size: 14px; font-weight: 600;
+      border: none; border-radius: 10px; cursor: pointer;
+      font-family: inherit; transition: all .2s;
+    }
+    .btn--primary {
+      background: var(--primary); color: #fff;
+    }
+    .btn--primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,.3); }
+    .btn--ghost {
+      background: transparent; color: var(--text-secondary);
+    }
+    .btn--ghost:hover { color: var(--text); background: rgba(0,0,0,.04); }
+    .btn--large { padding: 16px 40px; font-size: 16px; border-radius: 12px; }
+    .btn svg { width: 18px; height: 18px; }
+
+    /* ─── ERROR ─── */
+    .error-msg {
+      font-size: 13px; color: var(--error); margin-top: 10px;
+      display: none; font-weight: 500;
+    }
+    .error-msg.visible { display: block; animation: shake .3s; }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)}
+    }
+
+    /* ─── CONFIDENTIALITY NOTE ─── */
+    .conf-note {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 14px 16px; border-radius: 10px;
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      font-size: 13px; color: #166534; line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .conf-note svg { flex-shrink: 0; margin-top: 2px; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 600px) {
+      .field-row { grid-template-columns: 1fr; }
+      .range-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+      .range-row__label { width: auto; }
+      .nps-btn { width: 38px; height: 38px; font-size: 13px; }
+      .nav-buttons { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div class="progress-bar"><div class="progress-bar__fill" id="progressFill"></div></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header__step" id="stepIndicator"></div>
+</div>
+
+<!-- Slides container -->
+<div class="slides" id="slidesContainer">
+
+  <!-- SLIDE 0: Welcome -->
+  <div class="slide slide--welcome active" data-slide="0">
+    <div class="slide__inner">
+      <h1>Encuesta de Nivel de Automatizacion, Integracion y Politica Cero Papel</h1>
+      <p>Esta encuesta busca conocer el estado actual de automatizacion, integracion tecnologica y politica cero papel en su entidad. Su participacion es fundamental para generar un diagnostico confiable.</p>
+      <div class="conf-note">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Sus respuestas seran tratadas de forma <strong>confidencial</strong> y se usaran unicamente con fines de diagnostico y mejora.</span>
+      </div>
+      <button class="btn btn--primary btn--large" onclick="nextSlide()">
+        Comenzar encuesta
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- SLIDE 1: Datos de contexto -->
+  <div class="slide" data-slide="1">
+    <div class="slide__inner">
+      <span class="question__number">Datos de contexto</span>
+      <h2 class="question__title">Informacion de la entidad</h2>
+      <p class="question__desc">Estos datos nos permiten segmentar las respuestas y generar un diagnostico mas preciso.</p>
+
+      <div class="field-group">
+        <label>Nombre de la entidad</label>
+        <input type="text" id="entidad" placeholder="Ej: Contraloria Municipal de Bucaramanga" />
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Ciudad</label>
+          <input type="text" id="ciudad" placeholder="Ej: Bucaramanga" />
+        </div>
+        <div class="field-group">
+          <label>Departamento</label>
+          <input type="text" id="departamento" placeholder="Ej: Santander" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Diligenciado por</label>
+          <input type="text" id="diligenciado" placeholder="Nombre completo" />
+        </div>
+        <div class="field-group">
+          <label>Cargo</label>
+          <input type="text" id="cargo" placeholder="Ej: Director de TI" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Numero de funcionarios</label>
+          <select id="funcionarios">
+            <option value="">Seleccione...</option>
+            <option>Menos de 50</option>
+            <option>50 - 150</option>
+            <option>151 - 500</option>
+            <option>Mas de 500</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Software actual de gestion financiera</label>
+          <input type="text" id="software" placeholder="Ej: SAP, SIIF, TNS, Otro" />
+        </div>
+      </div>
+      <div class="error-msg" id="err1">Por favor complete todos los campos.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: Pregunta 1 — Expediente virtual -->
+  <div class="slide" data-slide="2">
+    <div class="slide__inner">
+      <span class="question__number">Pregunta 1 de 7</span>
+      <h2 class="question__title">Expediente virtual y politica cero papel</h2>
+      <p class="question__desc">La entidad dispone de un expediente virtual del proceso contractual que incluya trazabilidad de pagos, firma electronica, gestion desde dispositivos moviles y aplicacion de la politica cero papel?</p>
+
+      <div class="option-cards" id="q1options">
+        <label class="option-card" onclick="selectOption(this,'q1')">
+          <input type="radio" name="q1" value="Si" />
+          <span class="option-card__radio"></span>
+          <span class="option-card__label">Si</span>
+        </label>
+        <label class="option-card" onclick="selectOption(this,'q1')">
+          <input type="radio" name="q1" value="Parcialmente" />
+          <span class="option-card__radio"></span>
+          <span class="option-card__label">Parcialmente</span>
+        </label>
+        <label class="option-card" onclick="selectOption(this,'q1')">
+          <input type="radio" name="q1" value="No" />
+          <span class="option-card__radio"></span>
+          <span class="option-card__label">No</span>
+        </label>
+      </div>
+      <div class="error-msg" id="err2">Seleccione una opcion.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: Pregunta 2 — Integracion de procesos -->
+  <div class="slide" data-slide="3">
+    <div class="slide__inner">
+      <span class="question__number">Pregunta 2 de 7</span>
+      <h2 class="question__title">Integracion de procesos con el nucleo financiero y contable</h2>
+      <p class="question__desc">Indique si cada proceso se integra de forma automatizada o manual al nucleo financiero y contable.</p>
+
+      <table class="table-q">
+        <thead>
+          <tr><th>Proceso</th><th>Automatizada</th><th>Manual</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Recursos humanos</td>
+            <td><input class="table-radio" type="radio" name="q2_rrhh" value="Automatizada" /></td>
+            <td><input class="table-radio" type="radio" name="q2_rrhh" value="Manual" /></td>
+          </tr>
+          <tr>
+            <td>Recursos fisicos</td>
+            <td><input class="table-radio" type="radio" name="q2_rfis" value="Automatizada" /></td>
+            <td><input class="table-radio" type="radio" name="q2_rfis" value="Manual" /></td>
+          </tr>
+          <tr>
+            <td>Gestion de gasto</td>
+            <td><input class="table-radio" type="radio" name="q2_gasto" value="Automatizada" /></td>
+            <td><input class="table-radio" type="radio" name="q2_gasto" value="Manual" /></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="error-msg" id="err3">Seleccione una opcion en cada fila.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: Pregunta 3 — Nivel de confianza -->
+  <div class="slide" data-slide="4">
+    <div class="slide__inner">
+      <span class="question__number">Pregunta 3 de 7</span>
+      <h2 class="question__title">Nivel de confianza en el servicio tecnologico</h2>
+      <p class="question__desc">Que nivel de tranquilidad tiene la entidad frente a los niveles de servicio tecnico, disponibilidad y seguridad de la informacion de sus sistemas actuales?</p>
+
+      <div class="option-cards" id="q3options">
+        <label class="option-card" onclick="selectOption(this,'q3')">
+          <input type="radio" name="q3" value="Bajo" />
+          <span class="option-card__radio"></span>
+          <span class="option-card__label">Bajo</span>
+        </label>
+        <label class="option-card" onclick="selectOption(this,'q3')">
+          <input type="radio" name="q3" value="Medio" />
+          <span class="option-card__radio"></span>
+          <span class="option-card__label">Medio</span>
+        </label>
+        <label class="option-card" onclick="selectOption(this,'q3')">
+          <input type="radio" name="q3" value="Alto" />
+          <span class="option-card__radio"></span>
+          <span class="option-card__label">Alto</span>
+        </label>
+      </div>
+      <div class="error-msg" id="err4">Seleccione una opcion.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: Pregunta 4 — Grado de automatizacion -->
+  <div class="slide" data-slide="5">
+    <div class="slide__inner">
+      <span class="question__number">Pregunta 4 de 7</span>
+      <h2 class="question__title">Grado de automatizacion vs. procesamiento manual</h2>
+      <p class="question__desc">Para cada proceso, estime que porcentaje se realiza en el sistema de informacion y cual en Excel u hojas de calculo.</p>
+
+      <div>
+        <div class="range-row">
+          <span class="range-row__label">Cierres y aperturas de vigencia</span>
+          <select class="range-row__select" name="q4_cierres">
+            <option value="">% en sistema...</option>
+            <option value="0-25">0 – 25% en sistema</option>
+            <option value="26-50">26 – 50% en sistema</option>
+            <option value="51-75">51 – 75% en sistema</option>
+            <option value="76-100">76 – 100% en sistema</option>
+          </select>
+        </div>
+        <div class="range-row">
+          <span class="range-row__label">Cuentas por cobrar</span>
+          <select class="range-row__select" name="q4_cuentas">
+            <option value="">% en sistema...</option>
+            <option value="0-25">0 – 25% en sistema</option>
+            <option value="26-50">26 – 50% en sistema</option>
+            <option value="51-75">51 – 75% en sistema</option>
+            <option value="76-100">76 – 100% en sistema</option>
+          </select>
+        </div>
+        <div class="range-row">
+          <span class="range-row__label">Reservas</span>
+          <select class="range-row__select" name="q4_reservas">
+            <option value="">% en sistema...</option>
+            <option value="0-25">0 – 25% en sistema</option>
+            <option value="26-50">26 – 50% en sistema</option>
+            <option value="51-75">51 – 75% en sistema</option>
+            <option value="76-100">76 – 100% en sistema</option>
+          </select>
+        </div>
+        <div class="range-row">
+          <span class="range-row__label">Exogenas</span>
+          <select class="range-row__select" name="q4_exogenas">
+            <option value="">% en sistema...</option>
+            <option value="0-25">0 – 25% en sistema</option>
+            <option value="26-50">26 – 50% en sistema</option>
+            <option value="51-75">51 – 75% en sistema</option>
+            <option value="76-100">76 – 100% en sistema</option>
+          </select>
+        </div>
+        <div class="range-row">
+          <span class="range-row__label">Chip</span>
+          <select class="range-row__select" name="q4_chip">
+            <option value="">% en sistema...</option>
+            <option value="0-25">0 – 25% en sistema</option>
+            <option value="26-50">26 – 50% en sistema</option>
+            <option value="51-75">51 – 75% en sistema</option>
+            <option value="76-100">76 – 100% en sistema</option>
+          </select>
+        </div>
+        <div class="range-row">
+          <span class="range-row__label">Sia Observa</span>
+          <select class="range-row__select" name="q4_sia">
+            <option value="">% en sistema...</option>
+            <option value="0-25">0 – 25% en sistema</option>
+            <option value="26-50">26 – 50% en sistema</option>
+            <option value="51-75">51 – 75% en sistema</option>
+            <option value="76-100">76 – 100% en sistema</option>
+          </select>
+        </div>
+      </div>
+      <div class="error-msg" id="err5">Seleccione un rango para cada proceso.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: Pregunta 5 — Info para toma de decisiones -->
+  <div class="slide" data-slide="6">
+    <div class="slide__inner">
+      <span class="question__number">Pregunta 5 de 7</span>
+      <h2 class="question__title">Informacion para la toma de decisiones</h2>
+      <p class="question__desc">La entidad dispone de informacion completa, confiable y en linea para la toma de decisiones gerenciales de manera oportuna?</p>
+
+      <div class="option-cards" id="q5options">
+        <label class="option-card" onclick="selectOption(this,'q5')">
+          <input type="radio" name="q5" value="Si" />
+          <span class="option-card__radio"></span>
+          <span class="option-card__label">Si</span>
+        </label>
+        <label class="option-card" onclick="selectOption(this,'q5')">
+          <input type="radio" name="q5" value="Parcialmente" />
+          <span class="option-card__radio"></span>
+          <span class="option-card__label">Parcialmente</span>
+        </label>
+        <label class="option-card" onclick="selectOption(this,'q5')">
+          <input type="radio" name="q5" value="No" />
+          <span class="option-card__radio"></span>
+          <span class="option-card__label">No</span>
+        </label>
+      </div>
+      <div class="error-msg" id="err6">Seleccione una opcion.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: Pregunta 6 — NPS -->
+  <div class="slide" data-slide="7">
+    <div class="slide__inner">
+      <span class="question__number">Pregunta 6 de 7</span>
+      <h2 class="question__title">Satisfaccion con su sistema actual</h2>
+      <p class="question__desc">Del 0 al 10, que tan probable es que recomiende su sistema actual de gestion financiera a otra entidad?</p>
+
+      <div class="nps-row" id="npsRow"></div>
+      <div class="nps-labels"><span>Nada probable</span><span>Muy probable</span></div>
+      <div class="error-msg" id="err7">Seleccione un valor.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: Pregunta 7 — Pregunta abierta -->
+  <div class="slide" data-slide="8">
+    <div class="slide__inner">
+      <span class="question__number">Pregunta 7 de 7</span>
+      <h2 class="question__title">Mayor reto actual</h2>
+      <p class="question__desc">Cual es el mayor reto que enfrenta actualmente su entidad en la gestion financiera y contable?</p>
+
+      <div class="field-group">
+        <textarea id="q7text" placeholder="Describa brevemente su principal desafio..."></textarea>
+      </div>
+      <div class="error-msg" id="err8">Escriba al menos una breve respuesta.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: Thank you -->
+  <div class="slide slide--end" data-slide="9">
+    <div class="slide__inner">
+      <div class="check-icon">
+        <svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h1>Gracias por su participacion</h1>
+      <p>Sus respuestas han sido registradas exitosamente. Esta informacion sera de gran valor para generar un diagnostico confiable.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav-buttons" id="navButtons">
+  <button class="btn btn--ghost" id="btnPrev" onclick="prevSlide()" style="visibility:hidden">
+    <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+    Anterior
+  </button>
+  <button class="btn btn--primary" id="btnNext" onclick="nextSlide()" style="display:none">
+    Siguiente
+    <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </button>
+</div>
+
+<script>
+  const TOTAL_SLIDES = 10; // 0-9
+  const TOTAL_QUESTIONS = 9; // slides 0-9 but progress counts 1-8 as real steps
+  let current = 0;
+
+  // Build NPS buttons
+  const npsRow = document.getElementById('npsRow');
+  for (let i = 0; i <= 10; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'nps-btn';
+    btn.textContent = i;
+    btn.type = 'button';
+    btn.onclick = () => {
+      document.querySelectorAll('.nps-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      btn.dataset.value = i;
+    };
+    npsRow.appendChild(btn);
+  }
+
+  function updateUI() {
+    // Progress
+    const progress = current === 0 ? 0 : current >= TOTAL_SLIDES - 1 ? 100 : (current / (TOTAL_SLIDES - 1)) * 100;
+    document.getElementById('progressFill').style.width = progress + '%';
+
+    // Step indicator
+    const stepEl = document.getElementById('stepIndicator');
+    if (current === 0) stepEl.textContent = '';
+    else if (current >= TOTAL_SLIDES - 1) stepEl.innerHTML = '<span>Completada</span>';
+    else stepEl.innerHTML = `Paso <span>${current}</span> de ${TOTAL_SLIDES - 2}`;
+
+    // Nav buttons
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const nav = document.getElementById('navButtons');
+
+    if (current === 0) {
+      nav.style.display = 'none';
+    } else if (current >= TOTAL_SLIDES - 1) {
+      nav.style.display = 'none';
+    } else {
+      nav.style.display = 'flex';
+      btnPrev.style.visibility = current > 1 ? 'visible' : 'hidden';
+      btnNext.style.display = 'inline-flex';
+      btnNext.textContent = '';
+      if (current === TOTAL_SLIDES - 2) {
+        btnNext.innerHTML = 'Enviar respuestas <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="18" height="18"><path d="M5 13l4 4L19 7"/></svg>';
+      } else {
+        btnNext.innerHTML = 'Siguiente <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+      }
+    }
+  }
+
+  function hideErrors() {
+    document.querySelectorAll('.error-msg').forEach(e => e.classList.remove('visible'));
+  }
+
+  function showError(id) {
+    const el = document.getElementById(id);
+    if (el) { el.classList.add('visible'); }
+  }
+
+  function validate(slideIdx) {
+    hideErrors();
+    if (slideIdx === 1) {
+      const fields = ['entidad','ciudad','departamento','diligenciado','cargo','funcionarios'];
+      for (const f of fields) {
+        if (!document.getElementById(f).value.trim()) { showError('err1'); return false; }
+      }
+      return true;
+    }
+    if (slideIdx === 2) {
+      if (!document.querySelector('input[name="q1"]:checked')) { showError('err2'); return false; }
+      return true;
+    }
+    if (slideIdx === 3) {
+      const groups = ['q2_rrhh','q2_rfis','q2_gasto'];
+      for (const g of groups) {
+        if (!document.querySelector(`input[name="${g}"]:checked`)) { showError('err3'); return false; }
+      }
+      return true;
+    }
+    if (slideIdx === 4) {
+      if (!document.querySelector('input[name="q3"]:checked')) { showError('err4'); return false; }
+      return true;
+    }
+    if (slideIdx === 5) {
+      const selects = document.querySelectorAll('.range-row__select');
+      for (const s of selects) {
+        if (!s.value) { showError('err5'); return false; }
+      }
+      return true;
+    }
+    if (slideIdx === 6) {
+      if (!document.querySelector('input[name="q5"]:checked')) { showError('err6'); return false; }
+      return true;
+    }
+    if (slideIdx === 7) {
+      if (!document.querySelector('.nps-btn.selected')) { showError('err7'); return false; }
+      return true;
+    }
+    if (slideIdx === 8) {
+      if (!document.getElementById('q7text').value.trim()) { showError('err8'); return false; }
+      return true;
+    }
+    return true;
+  }
+
+  function goToSlide(target) {
+    const slides = document.querySelectorAll('.slide');
+    const currentSlide = slides[current];
+    const nextSlideEl = slides[target];
+
+    if (target > current) {
+      currentSlide.classList.remove('active');
+      currentSlide.classList.add('exit-left');
+      setTimeout(() => currentSlide.classList.remove('exit-left'), 500);
+    } else {
+      currentSlide.classList.remove('active');
+      currentSlide.style.transform = 'translateX(60px)';
+      currentSlide.style.opacity = '0';
+      setTimeout(() => { currentSlide.style.transform = ''; currentSlide.style.opacity = ''; }, 500);
+    }
+
+    nextSlideEl.classList.add('active');
+    current = target;
+    updateUI();
+    hideErrors();
+  }
+
+  function nextSlide() {
+    if (!validate(current)) return;
+    if (current === TOTAL_SLIDES - 2) {
+      collectResults();
+    }
+    if (current < TOTAL_SLIDES - 1) goToSlide(current + 1);
+  }
+
+  function prevSlide() {
+    if (current > 1) goToSlide(current - 1);
+  }
+
+  function selectOption(card, groupName) {
+    const parent = card.closest('.option-cards');
+    parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    card.querySelector('input').checked = true;
+    hideErrors();
+  }
+
+  function collectResults() {
+    const data = {
+      entidad: document.getElementById('entidad').value,
+      ciudad: document.getElementById('ciudad').value,
+      departamento: document.getElementById('departamento').value,
+      diligenciado: document.getElementById('diligenciado').value,
+      cargo: document.getElementById('cargo').value,
+      funcionarios: document.getElementById('funcionarios').value,
+      software: document.getElementById('software').value,
+      q1_expediente: document.querySelector('input[name="q1"]:checked')?.value,
+      q2_rrhh: document.querySelector('input[name="q2_rrhh"]:checked')?.value,
+      q2_rfis: document.querySelector('input[name="q2_rfis"]:checked')?.value,
+      q2_gasto: document.querySelector('input[name="q2_gasto"]:checked')?.value,
+      q3_confianza: document.querySelector('input[name="q3"]:checked')?.value,
+      q4_cierres: document.querySelector('[name="q4_cierres"]')?.value,
+      q4_cuentas: document.querySelector('[name="q4_cuentas"]')?.value,
+      q4_reservas: document.querySelector('[name="q4_reservas"]')?.value,
+      q4_exogenas: document.querySelector('[name="q4_exogenas"]')?.value,
+      q4_chip: document.querySelector('[name="q4_chip"]')?.value,
+      q4_sia: document.querySelector('[name="q4_sia"]')?.value,
+      q5_decisiones: document.querySelector('input[name="q5"]:checked')?.value,
+      q6_nps: document.querySelector('.nps-btn.selected')?.textContent,
+      q7_reto: document.getElementById('q7text').value,
+    };
+    console.log('Respuestas de la encuesta:', data);
+    // Here you could POST to a backend
+  }
+
+  // Keyboard nav
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && current > 0 && current < TOTAL_SLIDES - 1) nextSlide();
+  });
+
+  updateUI();
+</script>
+</body>
+</html>
