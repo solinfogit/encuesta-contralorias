@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Pendientes &mdash; Encuesta Contralorias</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --accent: #0ea5e9;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #475569;
+      --border: #e2e8f0;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,.06);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 48px 24px 80px;
+    }
+
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .doc-header {
+      margin-bottom: 32px;
+    }
+    .doc-header__eyebrow {
+      font-size: 12px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .doc-header h1 {
+      font-size: clamp(1.3rem, 3vw, 1.75rem);
+      font-weight: 800; line-height: 1.25;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .doc-header p {
+      font-size: 14px; color: var(--text-secondary);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 8px 0;
+    }
+
+    .item {
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    .item:last-child { border-bottom: none; }
+
+    .checkbox {
+      width: 18px; height: 18px; margin-top: 3px;
+      border: 2px solid var(--border);
+      border-radius: 4px; flex-shrink: 0;
+      background: var(--bg);
+    }
+
+    .item-body {}
+
+    .item-title {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .item-desc {
+      font-size: 14px; color: var(--text-secondary); line-height: 1.6;
+    }
+
+    .item-desc a {
+      color: var(--primary);
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .item-desc a:hover { color: var(--primary-dark); }
+
+    code {
+      font-family: ui-monospace, monospace;
+      font-size: 12.5px;
+      background: rgba(37,99,235,.07);
+      color: var(--primary-dark);
+      padding: 1px 5px; border-radius: 4px;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      font-size: 12px; color: #94a3b8;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .card { padding: 4px 0; }
+      .item { padding: 16px 18px; }
+      body { padding: 28px 16px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div class="doc-header">
+    <p class="doc-header__eyebrow">Documento interno &mdash; SOLUCIONES DE INFORMACION SAS</p>
+    <h1>Pendientes &mdash; Encuesta Contralorias</h1>
+    <p>Acciones pendientes antes de publicar la encuesta en produccion. No compartir externamente.</p>
+  </div>
+
+  <div class="card">
+
+    <div class="item">
+      <div class="checkbox"></div>
+      <div class="item-body">
+        <div class="item-title">Definir branding de la encuesta</div>
+        <div class="item-desc">
+          Al remover el branding de la Auditoria General, la encuesta quedo visualmente generica y pierde credibilidad institucional.
+          Decidir si aplicar la identidad de <strong>SIIFWeb</strong>, <strong>Soluciones de Informacion SAS</strong> o una combinacion, y ajustar logos, colores y tipografia en <code>index.html</code> (y en <code>politica-privacidad.html</code> si corresponde).
+        </div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="checkbox"></div>
+      <div class="item-body">
+        <div class="item-title">Correo institucional definitivo</div>
+        <div class="item-desc">
+          Confirmar correo oficial para solicitudes de habeas data. Actualmente <code>gerencia@solinfo.com.co</code> (temporal).
+          Al cambiar, actualizar las ocurrencias en <code>index.html</code> y <code>politica-privacidad.html</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="checkbox"></div>
+      <div class="item-body">
+        <div class="item-title">Registro RNBD ante la SIC</div>
+        <div class="item-desc">
+          Las personas juridicas con activos superiores a 100.000 UVT deben inscribir sus bases de datos con datos personales en el Registro Nacional de Bases de Datos (Ley 1581/2012, Decreto 90/2018).
+          Verificar si los activos de la empresa superan ese umbral y, si aplica, inscribir en <a href="https://www.sic.gov.co/rnbd" target="_blank">sic.gov.co/rnbd</a> antes de publicar.
+          El registro se actualiza anualmente (enero&ndash;marzo).
+        </div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="checkbox"></div>
+      <div class="item-body">
+        <div class="item-title">Retencion de datos: 2 anos</div>
+        <div class="item-desc">
+          Termino sugerido con base en practica del sector. Confirmar con juridica; si cambia, actualizar el aviso en <code>index.html</code> y la seccion 6 de <code>politica-privacidad.html</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="checkbox"></div>
+      <div class="item-body">
+        <div class="item-title">Revision juridica de la politica de privacidad</div>
+        <div class="item-desc">
+          <code>politica-privacidad.html</code> es tentativa. Validar y aprobar con juridica antes de produccion.
+          Evaluar si conviene publicarla tambien en el sitio corporativo como politica oficial permanente.
+        </div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="checkbox"></div>
+      <div class="item-body">
+        <div class="item-title">Oficial o area de proteccion de datos</div>
+        <div class="item-desc">
+          Formalizar internamente quien atiende solicitudes de titulares (nombre, cargo, escalamiento).
+          Plazos legales: 10 dias habiles para consultas, 15 dias habiles para reclamos.
+        </div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="checkbox"></div>
+      <div class="item-body">
+        <div class="item-title">Manual interno de procedimientos</div>
+        <div class="item-desc">
+          Documentar como se reciben, atienden, registran y escalan solicitudes de titulares; medidas de seguridad aplicadas; y proceso de supresion o anonimizacion al vencer el termino de retencion.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer-note">Ultima actualizacion: 2026-04-14</p>
+
+</div>
+
+</body>
+</html>

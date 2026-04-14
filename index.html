@@ -367,6 +367,63 @@
     }
     .conf-note svg { flex-shrink: 0; margin-top: 2px; }
 
+    /* ─── PRIVACY NOTICE ─── */
+    .privacy-notice {
+      text-align: left;
+      background: rgba(37,99,235,.04);
+      border: 1px solid rgba(37,99,235,.18);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 24px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .privacy-notice__header {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px;
+    }
+    .privacy-notice__header svg {
+      flex-shrink: 0; color: var(--primary);
+    }
+    .privacy-notice__title {
+      font-size: 13px; font-weight: 700;
+      color: var(--primary); letter-spacing: .1px;
+    }
+    .privacy-notice__body {
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    .privacy-notice__body a {
+      color: var(--primary); text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .privacy-notice__body a:hover { color: var(--primary-dark); }
+    .privacy-consent {
+      display: flex; align-items: flex-start; gap: 10px;
+      margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid rgba(37,99,235,.14);
+    }
+    .privacy-consent__checkbox {
+      width: 18px; height: 18px; flex-shrink: 0;
+      margin-top: 2px; cursor: pointer;
+      accent-color: var(--primary);
+    }
+    .privacy-consent__label {
+      font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer;
+      line-height: 1.5;
+    }
+    .privacy-note {
+      margin-top: 24px; padding-top: 18px;
+      border-top: 1px solid var(--border);
+      font-size: 13px; color: var(--text-secondary);
+      line-height: 1.6; text-align: left;
+    }
+    .privacy-note a {
+      color: var(--primary); text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
     /* ─── RESPONSIVE ─── */
     @media (max-width: 600px) {
       .field-row { grid-template-columns: 1fr; }
@@ -397,6 +454,24 @@
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         <span>Sus respuestas seran tratadas de forma <strong>confidencial</strong> y se usaran unicamente con fines de diagnostico y mejora.</span>
       </div>
+
+      <div class="privacy-notice">
+        <div class="privacy-notice__header">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span class="privacy-notice__title">Aviso de privacidad &mdash; Tratamiento de datos personales</span>
+        </div>
+        <p class="privacy-notice__body" style="margin-bottom:0">
+          <strong>SOLUCIONES DE INFORMACION SAS</strong> tratara sus datos personales (nombre, cargo, entidad) con fines de diagnostico sectorial, conforme a la Ley 1581 de 2012. Consulte la <a href="politica-privacidad.html" target="_blank" rel="noopener">politica de tratamiento de datos</a> para conocer sus derechos y el canal de contacto.
+        </p>
+        <div class="privacy-consent">
+          <input class="privacy-consent__checkbox" type="checkbox" id="chkPrivacy" />
+          <label class="privacy-consent__label" for="chkPrivacy">
+            Acepto el tratamiento de mis datos conforme a la politica de privacidad.
+          </label>
+        </div>
+        <div class="error-msg" id="errPrivacy" aria-live="polite">Debe aceptar el aviso de privacidad para continuar.</div>
+      </div>
+
       <button class="btn btn--primary btn--large" onclick="nextSlide()">
         Comenzar encuesta
         <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -419,7 +494,7 @@
           <label for="departamento">Departamento</label>
           <div class="combobox" data-combo="departamento">
             <input type="text" id="departamento" class="combobox__input"
-                   placeholder="Buscar departamento..." autocomplete="off"
+                   placeholder="Buscar o escribir departamento..." autocomplete="off"
                    role="combobox" aria-autocomplete="list" aria-expanded="false" />
             <button type="button" class="combobox__toggle" tabindex="-1" aria-label="Mostrar opciones">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
@@ -688,6 +763,9 @@
       </div>
       <h1>Gracias por su participacion</h1>
       <p>Sus respuestas han sido registradas exitosamente. Esta informacion sera de gran valor para generar un diagnostico confiable.</p>
+      <p class="privacy-note">
+        Sus datos fueron tratados de forma confidencial conforme a la <a href="politica-privacidad.html" target="_blank" rel="noopener">politica de privacidad</a>.
+      </p>
     </div>
   </div>
 
@@ -705,45 +783,10 @@
   </button>
 </div>
 
+<script src="colombia.js"></script>
 <script>
-  // ═══════════════════════════════════════════════════════════
-  //  DATOS: Departamentos y municipios de Colombia
-  // ═══════════════════════════════════════════════════════════
-  const COLOMBIA = {
-    'Amazonas': ['Leticia','Puerto Nariño'],
-    'Antioquia': ['Medellín','Bello','Itagüí','Envigado','Apartadó','Turbo','Rionegro','Caucasia','Copacabana','La Estrella','Sabaneta','Marinilla','El Bagre','Chigorodó','Necoclí','Carepa','Puerto Berrío','La Ceja','Andes','Yarumal','Segovia','Santa Fe de Antioquia','Girardota','Barbosa','Sonsón','Urrao','Frontino','Caldas','Guarne','Támesis'],
-    'Arauca': ['Arauca','Saravena','Tame','Arauquita','Fortul','Puerto Rondón','Cravo Norte'],
-    'Atlántico': ['Barranquilla','Soledad','Malambo','Puerto Colombia','Sabanalarga','Sabanagrande','Baranoa','Galapa','Palmar de Varela','Santo Tomás','Ponedera','Luruaco','Polonuevo','Juan de Acosta','Usiacurí','Campo de la Cruz','Candelaria','Repelón','Tubará','Manatí'],
-    'Bogotá D.C.': ['Bogotá D.C.'],
-    'Bolívar': ['Cartagena','Magangué','Turbaco','Arjona','El Carmen de Bolívar','Mompós','Santa Rosa del Sur','San Juan Nepomuceno','San Pablo','San Jacinto','Simití','María la Baja','Clemencia','Mahates','San Estanislao','Turbaná','Villanueva','Calamar','Morales','Achí'],
-    'Boyacá': ['Tunja','Duitama','Sogamoso','Chiquinquirá','Paipa','Puerto Boyacá','Villa de Leyva','Moniquirá','Nobsa','Tibasosa','Samacá','Ramiriquí','Guateque','Soatá','Garagoa','Miraflores','Cómbita','Ventaquemada','Belén','Saboyá','Muzo'],
-    'Caldas': ['Manizales','Villamaría','La Dorada','Chinchiná','Riosucio','Anserma','Salamina','Aguadas','Manzanares','Pácora','Supía','Neira','Palestina','Viterbo','Aranzazu','Pensilvania','Samaná','Filadelfia'],
-    'Caquetá': ['Florencia','San Vicente del Caguán','Puerto Rico','La Montañita','Belén de los Andaquíes','El Doncello','Cartagena del Chairá','Paujil','Milán','Solano','Solita','Albania','Curillo','Morelia','San José del Fragua','Valparaíso'],
-    'Casanare': ['Yopal','Aguazul','Tauramena','Villanueva','Paz de Ariporo','Monterrey','Maní','Trinidad','Orocué','Pore','Hato Corozal','Nunchía','San Luis de Palenque','Sabanalarga','Chámeza','Recetor','Sácama','La Salina'],
-    'Cauca': ['Popayán','Santander de Quilichao','Puerto Tejada','Patía','Piendamó','Miranda','Caloto','Guapi','Timbío','El Tambo','Bolívar','Cajibío','Silvia','Corinto','Toribío','Padilla','Morales','Suárez','Mercaderes','Caldono'],
-    'Cesar': ['Valledupar','Aguachica','Agustín Codazzi','La Jagua de Ibirico','Bosconia','Chiriguaná','Curumaní','Pailitas','San Alberto','San Martín','Pelaya','Tamalameque','Chimichagua','El Copey','El Paso','Becerril','La Paz','Manaure Balcón del Cesar'],
-    'Chocó': ['Quibdó','Istmina','Tadó','Condoto','Riosucio','Acandí','Bahía Solano','Nuquí','Bojayá','Medio San Juan','Unguía','Sipí','Lloró','Carmen del Darién','San José del Palmar','Bagadó','Alto Baudó','Medio Atrato','Novita'],
-    'Córdoba': ['Montería','Cereté','Sahagún','Lorica','Tierralta','Montelíbano','Planeta Rica','Ciénaga de Oro','Chinú','San Pelayo','Pueblo Nuevo','Ayapel','Puerto Libertador','San Andrés de Sotavento','Valencia','San Antero','Moñitos','Los Córdobas','Tuchín','Canalete','Buenavista','San Bernardo del Viento'],
-    'Cundinamarca': ['Soacha','Facatativá','Zipaquirá','Chía','Fusagasugá','Mosquera','Girardot','Madrid','Funza','Cajicá','La Calera','Cota','Tocancipá','Sibaté','Sopó','Tenjo','Ubaté','Pacho','Villeta','Cáqueza','La Mesa','Tabio','El Rosal','Anolaima','Guaduas','Ricaurte','Choachí','Une','Gachancipá','Subachoque'],
-    'Guainía': ['Inírida'],
-    'Guaviare': ['San José del Guaviare','El Retorno','Calamar','Miraflores'],
-    'Huila': ['Neiva','Pitalito','Garzón','La Plata','Campoalegre','Gigante','Palermo','Aipe','Rivera','Timaná','Isnos','San Agustín','Acevedo','Tesalia','Hobo','Algeciras','Oporapa','Pital','Saladoblanco','Suaza','Tello','Villavieja'],
-    'La Guajira': ['Riohacha','Maicao','Uribia','Manaure','San Juan del Cesar','Fonseca','Dibulla','Barrancas','Villanueva','Urumita','El Molino','Albania','Hatonuevo','Distracción','La Jagua del Pilar'],
-    'Magdalena': ['Santa Marta','Ciénaga','Fundación','El Banco','Plato','Aracataca','Zona Bananera','Pivijay','Sitionuevo','Salamina','El Retén','Ariguaní','Sabanas de San Ángel','Remolino','Tenerife','Pueblo Viejo','Algarrobo','El Piñón','Guamal','Pedraza'],
-    'Meta': ['Villavicencio','Acacías','Granada','Puerto López','San Martín','Puerto Gaitán','Cumaral','Restrepo','Puerto Lleras','Castilla la Nueva','Guamal','Vistahermosa','Puerto Concordia','Fuente de Oro','Puerto Rico','La Macarena','Mesetas','El Calvario','San Juanito','Lejanías'],
-    'Nariño': ['Pasto','Ipiales','Tumaco','Túquerres','La Unión','Sandona','Samaniego','Barbacoas','Cumbal','Guaitarilla','La Cruz','Ricaurte','Sapuyes','El Charco','Consacá','Pupiales','Buesaco','San Lorenzo','Taminango','Tangua','Yacuanquer'],
-    'Norte de Santander': ['Cúcuta','Ocaña','Pamplona','Villa del Rosario','Los Patios','El Zulia','Tibú','Chinácota','Ábrego','Salazar','Convención','Sardinata','Toledo','Durania','Villa Caro','Pamplonita','Chitagá','Teorama','Cáchira','San Calixto'],
-    'Putumayo': ['Mocoa','Puerto Asís','Orito','Valle del Guamuez','San Miguel','Puerto Caicedo','Villagarzón','Sibundoy','Colón','Santiago','San Francisco','Puerto Leguízamo','Puerto Guzmán'],
-    'Quindío': ['Armenia','Calarcá','La Tebaida','Montenegro','Quimbaya','Circasia','Salento','Filandia','Pijao','Córdoba','Buenavista','Génova'],
-    'Risaralda': ['Pereira','Dosquebradas','Santa Rosa de Cabal','La Virginia','Belén de Umbría','Quinchía','Apía','Balboa','Guática','Marsella','Mistrató','Pueblo Rico','Santuario','La Celia'],
-    'San Andrés y Providencia': ['San Andrés','Providencia'],
-    'Santander': ['Bucaramanga','Floridablanca','Girón','Piedecuesta','Barrancabermeja','San Gil','Socorro','Málaga','Vélez','Zapatoca','Lebrija','Rionegro','Puerto Wilches','Cimitarra','Sabana de Torres','El Playón','Los Santos','Barichara','Curití','Mogotes','San Vicente de Chucurí','Charalá','Suaita','Bolívar','Puente Nacional','Oiba','Matanza','California'],
-    'Sucre': ['Sincelejo','Corozal','Sampués','San Marcos','Tolú','San Onofre','Coveñas','Majagual','Sincé','Los Palmitos','Galeras','Morroa','Ovejas','San Benito Abad','Sucre','San Pedro','Buenavista','Colosó','Guaranda','La Unión','Palmito','San Juan de Betulia'],
-    'Tolima': ['Ibagué','Espinal','Honda','Melgar','Chaparral','Líbano','Flandes','Mariquita','Fresno','Purificación','Saldaña','Guamo','Venadillo','Lérida','Armero','Cajamarca','Ortega','Icononzo','Natagaima','Rovira','Falan','Santa Isabel','Coyaima','Planadas'],
-    'Valle del Cauca': ['Cali','Palmira','Buenaventura','Tuluá','Cartago','Buga','Yumbo','Jamundí','Candelaria','Florida','Pradera','Sevilla','Zarzal','La Unión','Roldanillo','Dagua','Caicedonia','Ginebra','Guacarí','Restrepo','Bugalagrande','El Cerrito','Andalucía','Trujillo','Vijes','La Cumbre','Obando','Toro','Argelia','Ansermanuevo','El Águila','El Cairo','El Dovio','Alcalá','Ulloa','San Pedro','Versalles','Yotoco','Riofrío','Bolívar','Calima','Darién'],
-    'Vaupés': ['Mitú','Carurú','Taraira'],
-    'Vichada': ['Puerto Carreño','La Primavera','Cumaribo','Santa Rosalía']
-  };
+  // COLOMBIA (departamentos y municipios) se carga desde colombia.js
+  const COLOMBIA = window.COLOMBIA;
 
   // ═══════════════════════════════════════════════════════════
   //  COMBOBOX — input con dropdown filtrable
@@ -877,20 +920,41 @@
     document.querySelector('[data-combo="ciudad"]'),
     { strict: false }
   );
+  function applyDeptCascade(dept) {
+    const match = Object.keys(COLOMBIA).find(k => norm(k) === norm(dept));
+    if (match) {
+      cityCombo.setOptions(COLOMBIA[match]);
+      cityCombo.input.disabled = false;
+      cityCombo.input.placeholder = 'Buscar o escribir ciudad...';
+    } else if (dept) {
+      // Departamento libre (no coincide con ninguno del listado): ciudad queda libre también
+      cityCombo.setOptions([]);
+      cityCombo.input.disabled = false;
+      cityCombo.input.placeholder = 'Escribir ciudad...';
+    } else {
+      cityCombo.setOptions([]);
+      cityCombo.setValue('');
+      cityCombo.input.disabled = true;
+      cityCombo.input.placeholder = 'Seleccione primero el departamento';
+    }
+    cityCombo.input.classList.remove('invalid');
+  }
   const deptCombo = new Combobox(
     document.querySelector('[data-combo="departamento"]'),
     {
-      strict: true,
+      strict: false,
       onSelect: (dept) => {
-        cityCombo.setOptions(COLOMBIA[dept] || []);
         cityCombo.setValue('');
-        cityCombo.input.disabled = false;
-        cityCombo.input.placeholder = 'Buscar o escribir ciudad...';
-        cityCombo.input.classList.remove('invalid');
+        applyDeptCascade(dept);
       }
     }
   );
   deptCombo.setOptions(Object.keys(COLOMBIA));
+  // Si el usuario escribe libremente el departamento y sale del campo,
+  // intentamos cascadear ciudades cuando el texto coincide con uno conocido.
+  deptCombo.input.addEventListener('blur', () => {
+    setTimeout(() => applyDeptCascade(deptCombo.getValue()), 150);
+  });
 
   // ═══════════════════════════════════════════════════════════
   //  SURVEY CONTROL
@@ -974,6 +1038,10 @@
 
   function validate(slideIdx) {
     hideErrors();
+    if (slideIdx === 0) {
+      if (!document.getElementById('chkPrivacy').checked) { showError('errPrivacy'); return false; }
+      return true;
+    }
     if (slideIdx === 1) {
       const entidad = document.getElementById('entidad').value.trim();
       const diligenciado = document.getElementById('diligenciado').value.trim();
