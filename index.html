@@ -33,30 +33,98 @@
       overflow: hidden;
     }
 
-    /* ─── PROGRESS BAR ─── */
-    .progress-bar {
-      position: fixed; top: 0; left: 0; width: 100%; height: 5px;
-      background: var(--border); z-index: 100;
-    }
-    .progress-bar__fill {
-      height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent));
-      transition: width .5s cubic-bezier(.4,0,.2,1);
-      border-radius: 0 3px 3px 0;
-    }
-
-    /* ─── HEADER ─── */
-    .header {
-      position: fixed; top: 5px; left: 0; right: 0;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 28px; z-index: 90;
-      background: rgba(248,250,252,.85); backdrop-filter: blur(12px);
+    /* ─── STEPPER (progress) ─── */
+    .stepper {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 28px; min-height: 52px;
+      background: rgba(248,250,252,.92); backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
+      z-index: 100;
+      transition: opacity .35s ease, transform .35s ease;
     }
-    .header__step {
-      font-size: 13px; font-weight: 600; color: var(--text-secondary);
-      letter-spacing: .3px;
+    .stepper.hidden {
+      opacity: 0; pointer-events: none; transform: translateY(-100%);
     }
-    .header__step span { color: var(--primary); }
+    .stepper__track {
+      display: flex; gap: 5px; flex: 1;
+    }
+    .stepper__segment {
+      height: 5px; flex: 1;
+      background: var(--border); border-radius: 3px;
+      transition: background .45s ease;
+      position: relative; overflow: hidden;
+    }
+    .stepper__segment.completed {
+      background: var(--primary);
+    }
+    .stepper__segment.active {
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+    .stepper__segment.active::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent);
+      animation: shimmer 1.8s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+      0%   { transform: translateX(-100%); }
+      60%  { transform: translateX(110%); }
+      100% { transform: translateX(110%); }
+    }
+    .stepper__label {
+      font-size: 12px; font-weight: 600; color: var(--text-secondary);
+      letter-spacing: .4px; white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .stepper__label strong { color: var(--primary); font-weight: 700; }
+
+    /* ─── COMBOBOX ─── */
+    .combobox { position: relative; }
+    .combobox__input {
+      padding-right: 42px !important;
+    }
+    .combobox__toggle {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px;
+      background: transparent; border: none; cursor: pointer;
+      color: var(--text-secondary);
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 6px;
+      transition: color .2s, transform .25s;
+    }
+    .combobox__toggle:hover { color: var(--primary); background: rgba(0,0,0,.04); }
+    .combobox__toggle svg { width: 16px; height: 16px; }
+    .combobox.open .combobox__toggle { transform: translateY(-50%) rotate(180deg); color: var(--primary); }
+    .combobox__panel {
+      position: absolute; left: 0; right: 0; top: calc(100% + 4px);
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,.10);
+      max-height: 240px; overflow-y: auto;
+      z-index: 120; padding: 4px;
+      display: none;
+    }
+    .combobox.open .combobox__panel { display: block; }
+    .combobox__option {
+      padding: 10px 12px; font-size: 14px; color: var(--text);
+      border-radius: 6px; cursor: pointer; line-height: 1.3;
+      transition: background .15s, color .15s;
+    }
+    .combobox__option:hover,
+    .combobox__option.active {
+      background: #eff6ff; color: var(--primary);
+    }
+    .combobox__option strong { color: var(--primary); font-weight: 700; }
+    .combobox__empty {
+      padding: 14px 12px; font-size: 13px; color: var(--text-secondary);
+      text-align: center; font-style: italic;
+    }
+    .combobox__input:disabled {
+      background: #f1f5f9; color: var(--text-secondary); cursor: not-allowed;
+    }
+    .combobox__input.invalid {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(239,68,68,.12);
+    }
 
     /* ─── SLIDE CONTAINER ─── */
     .slides {
@@ -113,11 +181,6 @@
     .slide--end p { color: var(--text-secondary); font-size: 15px; }
 
     /* ─── QUESTION STYLING ─── */
-    .question__number {
-      display: inline-block; font-size: 12px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1.5px;
-      color: var(--primary); margin-bottom: 10px;
-    }
     .question__title {
       font-size: clamp(1.15rem, 2.5vw, 1.45rem); font-weight: 700;
       line-height: 1.4; margin-bottom: 8px;
@@ -316,12 +379,10 @@
 </head>
 <body>
 
-<!-- Progress bar -->
-<div class="progress-bar"><div class="progress-bar__fill" id="progressFill"></div></div>
-
-<!-- Header -->
-<div class="header">
-  <div class="header__step" id="stepIndicator"></div>
+<!-- Stepper (top progress) -->
+<div class="stepper hidden" id="stepper" role="group" aria-label="Progreso de la encuesta">
+  <div class="stepper__track" id="stepperTrack"></div>
+  <div class="stepper__label" id="stepperLabel"></div>
 </div>
 
 <!-- Slides container -->
@@ -346,7 +407,6 @@
   <!-- SLIDE 1: Datos de contexto -->
   <div class="slide" data-slide="1">
     <div class="slide__inner">
-      <span class="question__number">Datos de contexto</span>
       <h2 class="question__title">Informacion de la entidad</h2>
       <p class="question__desc">Estos datos nos permiten segmentar las respuestas y generar un diagnostico mas preciso.</p>
 
@@ -356,12 +416,28 @@
       </div>
       <div class="field-row">
         <div class="field-group">
-          <label>Ciudad</label>
-          <input type="text" id="ciudad" placeholder="Ej: Bogotá D.C." />
+          <label for="departamento">Departamento</label>
+          <div class="combobox" data-combo="departamento">
+            <input type="text" id="departamento" class="combobox__input"
+                   placeholder="Buscar departamento..." autocomplete="off"
+                   role="combobox" aria-autocomplete="list" aria-expanded="false" />
+            <button type="button" class="combobox__toggle" tabindex="-1" aria-label="Mostrar opciones">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="combobox__panel" role="listbox"></div>
+          </div>
         </div>
         <div class="field-group">
-          <label>Departamento</label>
-          <input type="text" id="departamento" placeholder="Ej: Cundinamarca" />
+          <label for="ciudad">Ciudad</label>
+          <div class="combobox" data-combo="ciudad">
+            <input type="text" id="ciudad" class="combobox__input"
+                   placeholder="Seleccione primero el departamento" autocomplete="off"
+                   role="combobox" aria-autocomplete="list" aria-expanded="false" disabled />
+            <button type="button" class="combobox__toggle" tabindex="-1" aria-label="Mostrar opciones">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="combobox__panel" role="listbox"></div>
+          </div>
         </div>
       </div>
       <div class="field-row">
@@ -397,7 +473,6 @@
   <!-- SLIDE 2: Pregunta 1 — Expediente virtual -->
   <div class="slide" data-slide="2">
     <div class="slide__inner">
-      <span class="question__number">Pregunta 1 de 7</span>
       <h2 class="question__title">Expediente virtual y politica cero papel</h2>
       <p class="question__desc">La entidad dispone de un expediente virtual del proceso contractual que incluya trazabilidad de pagos, firma electronica, gestion desde dispositivos moviles y aplicacion de la politica cero papel?</p>
 
@@ -425,7 +500,6 @@
   <!-- SLIDE 3: Pregunta 2 — Integracion de procesos -->
   <div class="slide" data-slide="3">
     <div class="slide__inner">
-      <span class="question__number">Pregunta 2 de 7</span>
       <h2 class="question__title">Integracion de procesos con el nucleo financiero y contable</h2>
       <p class="question__desc">Indique si cada proceso se integra de forma automatizada o manual al nucleo financiero y contable.</p>
 
@@ -458,7 +532,6 @@
   <!-- SLIDE 4: Pregunta 3 — Nivel de confianza -->
   <div class="slide" data-slide="4">
     <div class="slide__inner">
-      <span class="question__number">Pregunta 3 de 7</span>
       <h2 class="question__title">Nivel de confianza en el servicio tecnologico</h2>
       <p class="question__desc">Que nivel de tranquilidad tiene la entidad frente a los niveles de servicio tecnico, disponibilidad y seguridad de la informacion de sus sistemas actuales?</p>
 
@@ -486,7 +559,6 @@
   <!-- SLIDE 5: Pregunta 4 — Grado de automatizacion -->
   <div class="slide" data-slide="5">
     <div class="slide__inner">
-      <span class="question__number">Pregunta 4 de 7</span>
       <h2 class="question__title">Grado de automatizacion vs. procesamiento manual</h2>
       <p class="question__desc">Para cada proceso, estime que porcentaje se realiza en el sistema de informacion y cual en Excel u hojas de calculo.</p>
 
@@ -559,7 +631,6 @@
   <!-- SLIDE 6: Pregunta 5 — Info para toma de decisiones -->
   <div class="slide" data-slide="6">
     <div class="slide__inner">
-      <span class="question__number">Pregunta 5 de 7</span>
       <h2 class="question__title">Informacion para la toma de decisiones</h2>
       <p class="question__desc">La entidad dispone de informacion completa, confiable y en linea para la toma de decisiones gerenciales de manera oportuna?</p>
 
@@ -587,7 +658,6 @@
   <!-- SLIDE 7: Pregunta 6 — NPS -->
   <div class="slide" data-slide="7">
     <div class="slide__inner">
-      <span class="question__number">Pregunta 6 de 7</span>
       <h2 class="question__title">Satisfaccion con su sistema actual</h2>
       <p class="question__desc">Del 0 al 10, que tan probable es que recomiende su sistema actual de gestion financiera a otra entidad?</p>
 
@@ -600,7 +670,6 @@
   <!-- SLIDE 8: Pregunta 7 — Pregunta abierta -->
   <div class="slide" data-slide="8">
     <div class="slide__inner">
-      <span class="question__number">Pregunta 7 de 7</span>
       <h2 class="question__title">Mayor reto actual</h2>
       <p class="question__desc">Cual es el mayor reto que enfrenta actualmente su entidad en la gestion financiera y contable?</p>
 
@@ -637,11 +706,201 @@
 </div>
 
 <script>
-  const TOTAL_SLIDES = 10; // 0-9
-  const TOTAL_QUESTIONS = 9; // slides 0-9 but progress counts 1-8 as real steps
+  // ═══════════════════════════════════════════════════════════
+  //  DATOS: Departamentos y municipios de Colombia
+  // ═══════════════════════════════════════════════════════════
+  const COLOMBIA = {
+    'Amazonas': ['Leticia','Puerto Nariño'],
+    'Antioquia': ['Medellín','Bello','Itagüí','Envigado','Apartadó','Turbo','Rionegro','Caucasia','Copacabana','La Estrella','Sabaneta','Marinilla','El Bagre','Chigorodó','Necoclí','Carepa','Puerto Berrío','La Ceja','Andes','Yarumal','Segovia','Santa Fe de Antioquia','Girardota','Barbosa','Sonsón','Urrao','Frontino','Caldas','Guarne','Támesis'],
+    'Arauca': ['Arauca','Saravena','Tame','Arauquita','Fortul','Puerto Rondón','Cravo Norte'],
+    'Atlántico': ['Barranquilla','Soledad','Malambo','Puerto Colombia','Sabanalarga','Sabanagrande','Baranoa','Galapa','Palmar de Varela','Santo Tomás','Ponedera','Luruaco','Polonuevo','Juan de Acosta','Usiacurí','Campo de la Cruz','Candelaria','Repelón','Tubará','Manatí'],
+    'Bogotá D.C.': ['Bogotá D.C.'],
+    'Bolívar': ['Cartagena','Magangué','Turbaco','Arjona','El Carmen de Bolívar','Mompós','Santa Rosa del Sur','San Juan Nepomuceno','San Pablo','San Jacinto','Simití','María la Baja','Clemencia','Mahates','San Estanislao','Turbaná','Villanueva','Calamar','Morales','Achí'],
+    'Boyacá': ['Tunja','Duitama','Sogamoso','Chiquinquirá','Paipa','Puerto Boyacá','Villa de Leyva','Moniquirá','Nobsa','Tibasosa','Samacá','Ramiriquí','Guateque','Soatá','Garagoa','Miraflores','Cómbita','Ventaquemada','Belén','Saboyá','Muzo'],
+    'Caldas': ['Manizales','Villamaría','La Dorada','Chinchiná','Riosucio','Anserma','Salamina','Aguadas','Manzanares','Pácora','Supía','Neira','Palestina','Viterbo','Aranzazu','Pensilvania','Samaná','Filadelfia'],
+    'Caquetá': ['Florencia','San Vicente del Caguán','Puerto Rico','La Montañita','Belén de los Andaquíes','El Doncello','Cartagena del Chairá','Paujil','Milán','Solano','Solita','Albania','Curillo','Morelia','San José del Fragua','Valparaíso'],
+    'Casanare': ['Yopal','Aguazul','Tauramena','Villanueva','Paz de Ariporo','Monterrey','Maní','Trinidad','Orocué','Pore','Hato Corozal','Nunchía','San Luis de Palenque','Sabanalarga','Chámeza','Recetor','Sácama','La Salina'],
+    'Cauca': ['Popayán','Santander de Quilichao','Puerto Tejada','Patía','Piendamó','Miranda','Caloto','Guapi','Timbío','El Tambo','Bolívar','Cajibío','Silvia','Corinto','Toribío','Padilla','Morales','Suárez','Mercaderes','Caldono'],
+    'Cesar': ['Valledupar','Aguachica','Agustín Codazzi','La Jagua de Ibirico','Bosconia','Chiriguaná','Curumaní','Pailitas','San Alberto','San Martín','Pelaya','Tamalameque','Chimichagua','El Copey','El Paso','Becerril','La Paz','Manaure Balcón del Cesar'],
+    'Chocó': ['Quibdó','Istmina','Tadó','Condoto','Riosucio','Acandí','Bahía Solano','Nuquí','Bojayá','Medio San Juan','Unguía','Sipí','Lloró','Carmen del Darién','San José del Palmar','Bagadó','Alto Baudó','Medio Atrato','Novita'],
+    'Córdoba': ['Montería','Cereté','Sahagún','Lorica','Tierralta','Montelíbano','Planeta Rica','Ciénaga de Oro','Chinú','San Pelayo','Pueblo Nuevo','Ayapel','Puerto Libertador','San Andrés de Sotavento','Valencia','San Antero','Moñitos','Los Córdobas','Tuchín','Canalete','Buenavista','San Bernardo del Viento'],
+    'Cundinamarca': ['Soacha','Facatativá','Zipaquirá','Chía','Fusagasugá','Mosquera','Girardot','Madrid','Funza','Cajicá','La Calera','Cota','Tocancipá','Sibaté','Sopó','Tenjo','Ubaté','Pacho','Villeta','Cáqueza','La Mesa','Tabio','El Rosal','Anolaima','Guaduas','Ricaurte','Choachí','Une','Gachancipá','Subachoque'],
+    'Guainía': ['Inírida'],
+    'Guaviare': ['San José del Guaviare','El Retorno','Calamar','Miraflores'],
+    'Huila': ['Neiva','Pitalito','Garzón','La Plata','Campoalegre','Gigante','Palermo','Aipe','Rivera','Timaná','Isnos','San Agustín','Acevedo','Tesalia','Hobo','Algeciras','Oporapa','Pital','Saladoblanco','Suaza','Tello','Villavieja'],
+    'La Guajira': ['Riohacha','Maicao','Uribia','Manaure','San Juan del Cesar','Fonseca','Dibulla','Barrancas','Villanueva','Urumita','El Molino','Albania','Hatonuevo','Distracción','La Jagua del Pilar'],
+    'Magdalena': ['Santa Marta','Ciénaga','Fundación','El Banco','Plato','Aracataca','Zona Bananera','Pivijay','Sitionuevo','Salamina','El Retén','Ariguaní','Sabanas de San Ángel','Remolino','Tenerife','Pueblo Viejo','Algarrobo','El Piñón','Guamal','Pedraza'],
+    'Meta': ['Villavicencio','Acacías','Granada','Puerto López','San Martín','Puerto Gaitán','Cumaral','Restrepo','Puerto Lleras','Castilla la Nueva','Guamal','Vistahermosa','Puerto Concordia','Fuente de Oro','Puerto Rico','La Macarena','Mesetas','El Calvario','San Juanito','Lejanías'],
+    'Nariño': ['Pasto','Ipiales','Tumaco','Túquerres','La Unión','Sandona','Samaniego','Barbacoas','Cumbal','Guaitarilla','La Cruz','Ricaurte','Sapuyes','El Charco','Consacá','Pupiales','Buesaco','San Lorenzo','Taminango','Tangua','Yacuanquer'],
+    'Norte de Santander': ['Cúcuta','Ocaña','Pamplona','Villa del Rosario','Los Patios','El Zulia','Tibú','Chinácota','Ábrego','Salazar','Convención','Sardinata','Toledo','Durania','Villa Caro','Pamplonita','Chitagá','Teorama','Cáchira','San Calixto'],
+    'Putumayo': ['Mocoa','Puerto Asís','Orito','Valle del Guamuez','San Miguel','Puerto Caicedo','Villagarzón','Sibundoy','Colón','Santiago','San Francisco','Puerto Leguízamo','Puerto Guzmán'],
+    'Quindío': ['Armenia','Calarcá','La Tebaida','Montenegro','Quimbaya','Circasia','Salento','Filandia','Pijao','Córdoba','Buenavista','Génova'],
+    'Risaralda': ['Pereira','Dosquebradas','Santa Rosa de Cabal','La Virginia','Belén de Umbría','Quinchía','Apía','Balboa','Guática','Marsella','Mistrató','Pueblo Rico','Santuario','La Celia'],
+    'San Andrés y Providencia': ['San Andrés','Providencia'],
+    'Santander': ['Bucaramanga','Floridablanca','Girón','Piedecuesta','Barrancabermeja','San Gil','Socorro','Málaga','Vélez','Zapatoca','Lebrija','Rionegro','Puerto Wilches','Cimitarra','Sabana de Torres','El Playón','Los Santos','Barichara','Curití','Mogotes','San Vicente de Chucurí','Charalá','Suaita','Bolívar','Puente Nacional','Oiba','Matanza','California'],
+    'Sucre': ['Sincelejo','Corozal','Sampués','San Marcos','Tolú','San Onofre','Coveñas','Majagual','Sincé','Los Palmitos','Galeras','Morroa','Ovejas','San Benito Abad','Sucre','San Pedro','Buenavista','Colosó','Guaranda','La Unión','Palmito','San Juan de Betulia'],
+    'Tolima': ['Ibagué','Espinal','Honda','Melgar','Chaparral','Líbano','Flandes','Mariquita','Fresno','Purificación','Saldaña','Guamo','Venadillo','Lérida','Armero','Cajamarca','Ortega','Icononzo','Natagaima','Rovira','Falan','Santa Isabel','Coyaima','Planadas'],
+    'Valle del Cauca': ['Cali','Palmira','Buenaventura','Tuluá','Cartago','Buga','Yumbo','Jamundí','Candelaria','Florida','Pradera','Sevilla','Zarzal','La Unión','Roldanillo','Dagua','Caicedonia','Ginebra','Guacarí','Restrepo','Bugalagrande','El Cerrito','Andalucía','Trujillo','Vijes','La Cumbre','Obando','Toro','Argelia','Ansermanuevo','El Águila','El Cairo','El Dovio','Alcalá','Ulloa','San Pedro','Versalles','Yotoco','Riofrío','Bolívar','Calima','Darién'],
+    'Vaupés': ['Mitú','Carurú','Taraira'],
+    'Vichada': ['Puerto Carreño','La Primavera','Cumaribo','Santa Rosalía']
+  };
+
+  // ═══════════════════════════════════════════════════════════
+  //  COMBOBOX — input con dropdown filtrable
+  // ═══════════════════════════════════════════════════════════
+  const norm = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const escHTML = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function highlight(text, q) {
+    if (!q) return escHTML(text);
+    const idx = norm(text).indexOf(norm(q));
+    if (idx < 0) return escHTML(text);
+    return escHTML(text.slice(0, idx)) + '<strong>' + escHTML(text.slice(idx, idx + q.length)) + '</strong>' + escHTML(text.slice(idx + q.length));
+  }
+
+  class Combobox {
+    constructor(root, opts = {}) {
+      this.root = root;
+      this.input = root.querySelector('.combobox__input');
+      this.toggle = root.querySelector('.combobox__toggle');
+      this.panel = root.querySelector('.combobox__panel');
+      this.strict = !!opts.strict;
+      this.onSelect = opts.onSelect || (() => {});
+      this.options = [];
+      this.activeIdx = -1;
+      this.attach();
+    }
+    attach() {
+      this.input.addEventListener('focus', () => { if (!this.input.disabled) this.open(); });
+      this.input.addEventListener('click', () => { if (!this.input.disabled) this.open(); });
+      this.input.addEventListener('input', () => {
+        this.activeIdx = -1;
+        if (!this.isOpen()) this.open();
+        else this.render();
+        this.input.classList.remove('invalid');
+      });
+      this.input.addEventListener('keydown', e => this.onKey(e));
+      this.input.addEventListener('blur', () => setTimeout(() => this.close(), 120));
+      this.toggle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        if (this.input.disabled) return;
+        if (this.isOpen()) this.close();
+        else { this.input.focus(); this.open(); }
+      });
+      this.panel.addEventListener('mousedown', e => e.preventDefault());
+    }
+    setOptions(opts) { this.options = opts || []; this.render(); }
+    setValue(v) { this.input.value = v || ''; }
+    getValue() { return this.input.value.trim(); }
+    isOpen() { return this.root.classList.contains('open'); }
+    open() {
+      if (this.isOpen()) return;
+      this.root.classList.add('open');
+      this.input.setAttribute('aria-expanded','true');
+      this.render();
+    }
+    close() {
+      this.root.classList.remove('open');
+      this.input.setAttribute('aria-expanded','false');
+      this.activeIdx = -1;
+    }
+    filtered() {
+      const q = norm(this.input.value);
+      if (!q) return this.options.slice();
+      return this.options.filter(o => norm(o).includes(q));
+    }
+    render() {
+      const list = this.filtered();
+      if (!list.length) {
+        this.panel.innerHTML = '<div class="combobox__empty">Sin resultados</div>';
+        return;
+      }
+      const q = this.input.value;
+      this.panel.innerHTML = list.map((o, i) =>
+        `<div class="combobox__option${i === this.activeIdx ? ' active' : ''}" data-idx="${i}" role="option">${highlight(o, q)}</div>`
+      ).join('');
+      this.panel.querySelectorAll('.combobox__option').forEach(el => {
+        el.addEventListener('mousedown', e => {
+          e.preventDefault();
+          this.select(list[parseInt(el.dataset.idx, 10)]);
+        });
+      });
+    }
+    select(value) {
+      this.input.value = value;
+      this.input.classList.remove('invalid');
+      this.close();
+      this.onSelect(value);
+      this.input.dispatchEvent(new Event('change', { bubbles: true }));
+      hideErrors();
+    }
+    onKey(e) {
+      const list = this.filtered();
+      if (e.key === 'ArrowDown') {
+        e.preventDefault(); e.stopPropagation();
+        if (!this.isOpen()) { this.open(); return; }
+        this.activeIdx = Math.min((this.activeIdx < 0 ? -1 : this.activeIdx) + 1, list.length - 1);
+        this.render(); this.scrollToActive();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault(); e.stopPropagation();
+        if (!this.isOpen()) { this.open(); return; }
+        this.activeIdx = Math.max(this.activeIdx - 1, 0);
+        this.render(); this.scrollToActive();
+      } else if (e.key === 'Enter') {
+        if (this.isOpen() && list.length && this.activeIdx >= 0) {
+          e.preventDefault(); e.stopPropagation();
+          this.select(list[this.activeIdx]);
+        } else if (this.isOpen()) {
+          e.preventDefault(); e.stopPropagation();
+          this.close();
+        }
+      } else if (e.key === 'Escape') {
+        if (this.isOpen()) { e.preventDefault(); e.stopPropagation(); this.close(); }
+      } else if (e.key === 'Tab') {
+        this.close();
+      }
+    }
+    scrollToActive() {
+      const a = this.panel.querySelector('.combobox__option.active');
+      if (a) a.scrollIntoView({ block: 'nearest' });
+    }
+    isValid() {
+      const v = this.getValue();
+      if (!v) return false;
+      if (!this.strict) return true;
+      return this.options.some(o => norm(o) === norm(v));
+    }
+    markInvalid(on) { this.input.classList.toggle('invalid', !!on); }
+  }
+
+  // Init comboboxes
+  const cityCombo = new Combobox(
+    document.querySelector('[data-combo="ciudad"]'),
+    { strict: false }
+  );
+  const deptCombo = new Combobox(
+    document.querySelector('[data-combo="departamento"]'),
+    {
+      strict: true,
+      onSelect: (dept) => {
+        cityCombo.setOptions(COLOMBIA[dept] || []);
+        cityCombo.setValue('');
+        cityCombo.input.disabled = false;
+        cityCombo.input.placeholder = 'Buscar o escribir ciudad...';
+        cityCombo.input.classList.remove('invalid');
+      }
+    }
+  );
+  deptCombo.setOptions(Object.keys(COLOMBIA));
+
+  // ═══════════════════════════════════════════════════════════
+  //  SURVEY CONTROL
+  // ═══════════════════════════════════════════════════════════
+  const TOTAL_SLIDES = 10;
+  const WELCOME = 0, END = 9;
+  const STEPS = END - 1; // 8 content slides (1..8)
   let current = 0;
 
-  // Build NPS buttons
+  // NPS buttons
   const npsRow = document.getElementById('npsRow');
   for (let i = 0; i <= 10; i++) {
     const btn = document.createElement('button');
@@ -656,32 +915,48 @@
     npsRow.appendChild(btn);
   }
 
+  // Stepper segments
+  const stepperTrack = document.getElementById('stepperTrack');
+  for (let i = 0; i < STEPS; i++) {
+    const seg = document.createElement('div');
+    seg.className = 'stepper__segment';
+    stepperTrack.appendChild(seg);
+  }
+
   function updateUI() {
-    // Progress
-    const progress = current === 0 ? 0 : current >= TOTAL_SLIDES - 1 ? 100 : (current / (TOTAL_SLIDES - 1)) * 100;
-    document.getElementById('progressFill').style.width = progress + '%';
+    const stepper = document.getElementById('stepper');
+    const label = document.getElementById('stepperLabel');
+    const segments = stepperTrack.querySelectorAll('.stepper__segment');
 
-    // Step indicator
-    const stepEl = document.getElementById('stepIndicator');
-    if (current === 0) stepEl.textContent = '';
-    else if (current >= TOTAL_SLIDES - 1) stepEl.innerHTML = '<span>Completada</span>';
-    else stepEl.innerHTML = `Paso <span>${current}</span> de ${TOTAL_SLIDES - 2}`;
+    if (current === WELCOME) {
+      stepper.classList.add('hidden');
+    } else {
+      stepper.classList.remove('hidden');
+      segments.forEach((seg, i) => {
+        seg.classList.remove('active','completed');
+        if (current === END) {
+          seg.classList.add('completed');
+        } else {
+          if (i < current - 1) seg.classList.add('completed');
+          else if (i === current - 1) seg.classList.add('active');
+        }
+      });
+      label.innerHTML = current === END
+        ? '¡Completada!'
+        : `Paso <strong>${current}</strong> de ${STEPS}`;
+    }
 
-    // Nav buttons
     const btnPrev = document.getElementById('btnPrev');
     const btnNext = document.getElementById('btnNext');
     const nav = document.getElementById('navButtons');
 
-    if (current === 0) {
-      nav.style.display = 'none';
-    } else if (current >= TOTAL_SLIDES - 1) {
+    if (current === WELCOME || current === END) {
       nav.style.display = 'none';
     } else {
       nav.style.display = 'flex';
       btnPrev.style.visibility = current > 1 ? 'visible' : 'hidden';
       btnNext.style.display = 'inline-flex';
-      btnNext.textContent = '';
-      if (current === TOTAL_SLIDES - 2) {
+      if (current === END - 1) {
         btnNext.innerHTML = 'Enviar respuestas <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="18" height="18"><path d="M5 13l4 4L19 7"/></svg>';
       } else {
         btnNext.innerHTML = 'Siguiente <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
@@ -692,18 +967,27 @@
   function hideErrors() {
     document.querySelectorAll('.error-msg').forEach(e => e.classList.remove('visible'));
   }
-
   function showError(id) {
     const el = document.getElementById(id);
-    if (el) { el.classList.add('visible'); }
+    if (el) el.classList.add('visible');
   }
 
   function validate(slideIdx) {
     hideErrors();
     if (slideIdx === 1) {
-      const fields = ['entidad','ciudad','departamento','diligenciado','cargo','funcionarios'];
-      for (const f of fields) {
-        if (!document.getElementById(f).value.trim()) { showError('err1'); return false; }
+      const entidad = document.getElementById('entidad').value.trim();
+      const diligenciado = document.getElementById('diligenciado').value.trim();
+      const cargo = document.getElementById('cargo').value.trim();
+      const funcionarios = document.getElementById('funcionarios').value.trim();
+      const deptOK = deptCombo.isValid();
+      const cityOK = cityCombo.isValid();
+
+      deptCombo.markInvalid(!deptOK);
+      cityCombo.markInvalid(!cityOK);
+
+      if (!entidad || !diligenciado || !cargo || !funcionarios || !deptOK || !cityOK) {
+        showError('err1');
+        return false;
       }
       return true;
     }
@@ -712,8 +996,7 @@
       return true;
     }
     if (slideIdx === 3) {
-      const groups = ['q2_rrhh','q2_rfis','q2_gasto'];
-      for (const g of groups) {
+      for (const g of ['q2_rrhh','q2_rfis','q2_gasto']) {
         if (!document.querySelector(`input[name="${g}"]:checked`)) { showError('err3'); return false; }
       }
       return true;
@@ -724,9 +1007,7 @@
     }
     if (slideIdx === 5) {
       const selects = document.querySelectorAll('.range-row__select');
-      for (const s of selects) {
-        if (!s.value) { showError('err5'); return false; }
-      }
+      for (const s of selects) if (!s.value) { showError('err5'); return false; }
       return true;
     }
     if (slideIdx === 6) {
@@ -768,15 +1049,10 @@
 
   function nextSlide() {
     if (!validate(current)) return;
-    if (current === TOTAL_SLIDES - 2) {
-      collectResults();
-    }
-    if (current < TOTAL_SLIDES - 1) goToSlide(current + 1);
+    if (current === END - 1) collectResults();
+    if (current < END) goToSlide(current + 1);
   }
-
-  function prevSlide() {
-    if (current > 1) goToSlide(current - 1);
-  }
+  function prevSlide() { if (current > 1) goToSlide(current - 1); }
 
   function selectOption(card, groupName) {
     const parent = card.closest('.option-cards');
@@ -789,8 +1065,8 @@
   function collectResults() {
     const data = {
       entidad: document.getElementById('entidad').value,
-      ciudad: document.getElementById('ciudad').value,
       departamento: document.getElementById('departamento').value,
+      ciudad: document.getElementById('ciudad').value,
       diligenciado: document.getElementById('diligenciado').value,
       cargo: document.getElementById('cargo').value,
       funcionarios: document.getElementById('funcionarios').value,
@@ -811,12 +1087,15 @@
       q7_reto: document.getElementById('q7text').value,
     };
     console.log('Respuestas de la encuesta:', data);
-    // Here you could POST to a backend
   }
 
-  // Keyboard nav
+  // Keyboard: Enter avanza, excepto en textarea o combobox input
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && current > 0 && current < TOTAL_SLIDES - 1) nextSlide();
+    if (e.key !== 'Enter') return;
+    const t = e.target;
+    if (t instanceof HTMLTextAreaElement) return;
+    if (t && t.classList && t.classList.contains('combobox__input')) return;
+    if (current > 0 && current < END) nextSlide();
   });
 
   updateUI();
